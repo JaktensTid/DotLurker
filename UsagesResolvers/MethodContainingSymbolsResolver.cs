@@ -5,19 +5,19 @@ namespace DotLurker.UsagesResolvers;
 
 public class MethodContainingSymbolsResolver : IContainingSymbolsResolver<IMethodSymbol>
 {
-    public async Task<IReadOnlyCollection<ISymbol>> GetAllContainingSymbols(IMethodSymbol symbol, Compilation compilation)
+    private readonly IDictionary<string, Compilation> _compilations;
+
+    public MethodContainingSymbolsResolver(IDictionary<string, Compilation> compilations)
     {
-        return await GetAllContainingSymbols(symbol, x => true, compilation);
+        _compilations = compilations;
     }
 
     public async Task<IReadOnlyCollection<ISymbol>> GetAllContainingSymbols(
-        IMethodSymbol methodSymbol,
-        Predicate<ISymbol> symbolFilter,
-        Compilation compilation)
+        IMethodSymbol methodSymbol)
     {
         var result = new List<ISymbol>();
 
-        foreach (var symbol in await FindSymbolsInMethod(methodSymbol, compilation))
+        foreach (var symbol in await FindSymbolsInMethod(methodSymbol))
         {
             result.Add(symbol);
         }
@@ -25,14 +25,17 @@ public class MethodContainingSymbolsResolver : IContainingSymbolsResolver<IMetho
         return result;
     }
 
-    private async Task<List<ISymbol>> FindSymbolsInMethod(IMethodSymbol methodSymbol, Compilation compilation)
+    private async Task<List<ISymbol>> FindSymbolsInMethod(IMethodSymbol methodSymbol)
     {
         var usedSymbols = new List<ISymbol>();
         foreach (var syntaxReference in methodSymbol.DeclaringSyntaxReferences)
         {
             var methodNode = await syntaxReference.GetSyntaxAsync();
+            var compilation = _compilations[methodSymbol.ContainingAssembly.Name];
             var model = compilation.GetSemanticModel(syntaxReference.SyntaxTree);
-            var allSymbolUsages = methodNode.DescendantNodes().OfType<IdentifierNameSyntax>();
+            
+            // Normal usages
+            var allSymbolUsages = methodNode.DescendantNodes();
 
             foreach (var usage in allSymbolUsages)
             {
@@ -40,8 +43,19 @@ public class MethodContainingSymbolsResolver : IContainingSymbolsResolver<IMetho
                 if (symbol != null)
                     usedSymbols.Add(symbol);
             }
+            
+            // Invocable
+            var allInvocableUsages = methodNode.DescendantNodes().OfType<InvocationExpressionSyntax>();
+            foreach (var usage in allInvocableUsages)
+            {
+                var symbol = model.GetSymbolInfo(usage).Symbol;
+                //if (symbol. == TypeKind.Delegate)
+                //{
+               //     Console.WriteLine($"Type '{typeSymbol.Name}' is a delegate type.");
+                //}
+            }
         }
-
+    
         return usedSymbols;
     }
 }

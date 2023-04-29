@@ -16,18 +16,23 @@ namespace DotLurker
             MSBuildLocator.RegisterMSBuildPath(@"C:\Program Files\dotnet\sdk\7.0.203");
             using var workspace = MSBuildWorkspace.Create();
 
-//Solution solution = await workspace.OpenSolutionAsync(solutionPath);
-//var projects = solution.Projects;
-            var projects = new[]
-            {
-                await workspace.OpenProjectAsync(
-                    @"D:\RiderProjects\DotLurker\DotLurker.Sut\DotLurker.Sut\DotLurker.Sut.csproj")
-            };
+            Solution solution =
+                await workspace.OpenSolutionAsync(
+                    @"D:\VMbrowser\VMBrowser.Orca.Web\VMBrowser.Orca.Web\VMBrowser.Orca.Web.sln");
+            var projects = solution.Projects;
+            //var projects = new[]
+            //{
+            //    await workspace.OpenProjectAsync(
+            //        @"D:\RiderProjects\DotLurker\DotLurker.Sut\DotLurker.Sut\DotLurker.Sut.csproj")
+            //};
 
+            var compilationsDictionary = new Dictionary<string, Compilation>();
             var compilations = new List<Compilation>();
             foreach (var project in projects)
             {
-                compilations.Add(await project.GetCompilationAsync());
+                var compilation = await project.GetCompilationAsync();
+                compilations.Add(compilation);
+                compilationsDictionary.Add(compilation.AssemblyName, compilation);
             }
 
             var inheritanceManager = await InheritanceManager.Create(compilations.ToArray());
@@ -44,41 +49,20 @@ namespace DotLurker
                         .OfType<ClassDeclarationSyntax>();
 
                     foreach (var classDeclaration in classDeclarations.Where(x =>
-                                 semanticModel.GetDeclaredSymbol(x).Name == "Program"))
+                                 semanticModel.GetDeclaredSymbol(x).Name == "SymLogicHandler"))
                     {
                         var method = classDeclaration.DescendantNodes()
                             .OfType<MethodDeclarationSyntax>()
-                            .FirstOrDefault(x => semanticModel.GetDeclaredSymbol(x)?.Name == "Main");
+                            .FirstOrDefault(x => semanticModel.GetDeclaredSymbol(x)?.Name == "Creating");
                         if (method != null)
                         {
                             var methodSymbol = semanticModel.GetDeclaredSymbol(method);
-                            bool NamespacePredicate(ISymbol s) => namespaces.Contains(s.ContainingNamespace.ToDisplayString());
 
-                            bool LambdaPredicate(ISymbol s)
-                            {
-                                if (s.Kind == SymbolKind.Method)
-                                {
-                                    var sMethod = s as IMethodSymbol;
-                                    if (sMethod.MethodKind is MethodKind.AnonymousFunction or MethodKind.LambdaMethod
-                                        or MethodKind.DelegateInvoke) return true;
-                                }
+                            var usagesResolver = new UsagesTreeBuilder(inheritanceManager,
+                                new MethodContainingSymbolsResolver(compilationsDictionary));
+                            var usages = await usagesResolver.PopulateNode(methodSymbol, new HashSet<int>());
 
-                                return false;
-                            }
-
-                            try
-                            {
-                                var usagesResolver = new UsagesResolver(inheritanceManager);
-                                var usages = await usagesResolver.PopulateNode(methodSymbol,
-                                    s => NamespacePredicate(s) || LambdaPredicate(s),
-                                    compilation, new HashSet<int>());
-
-                                Console.WriteLine("test");
-                            }
-                            catch (Exception e)
-                            {
-                                Console.Write(e);
-                            }
+                            Console.WriteLine("test");
                         }
                     }
                 }
