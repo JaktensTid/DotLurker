@@ -35,16 +35,6 @@ public class InheritanceManager
         }
     }
 
-    public INamedTypeSymbol GetBaseClass(INamedTypeSymbol type)
-    {
-        if (type.BaseType is { TypeKind: TypeKind.Class })
-        {
-            return GetBaseClass(type.BaseType);
-        }
-
-        return type;
-    }
-
     public IReadOnlyCollection<INamedTypeSymbol> GetAllDerivedClasses(INamedTypeSymbol baseType)
     {
         var derivedClasses = new List<INamedTypeSymbol>();
@@ -59,39 +49,5 @@ public class InheritanceManager
         }
 
         return derivedClasses;
-    }
-    
-    public IEnumerable<IMethodSymbol> GetAllOverridesOfBaseOf(IMethodSymbol methodSymbol)
-    {
-        if (methodSymbol.IsOverride || methodSymbol.IsVirtual || methodSymbol.IsAbstract)
-        {
-            
-        }
-        
-        yield break;
-        
-        if (methodSymbol is { IsVirtual: false, IsAbstract: false } &&
-            methodSymbol.ContainingType.TypeKind != TypeKind.Interface)
-            yield break;
-
-        var overridenMethod = methodSymbol.OverriddenMethod;
-        if (overridenMethod == null)
-        {
-            var inheritedTypes = GetAllDerivedClasses(methodSymbol.ContainingType);
-            foreach (var inheritedType in inheritedTypes)
-            {
-                foreach (var member in inheritedType.GetMembers().Where(x => x.Name == methodSymbol.Name))
-                {
-                    yield return (IMethodSymbol)member;
-                }
-            }
-
-            yield break;
-        }
-
-        foreach (var subOverride in GetAllOverridesOfBaseOf(overridenMethod))
-        {
-            yield return subOverride;
-        }
     }
 }

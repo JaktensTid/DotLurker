@@ -1,13 +1,12 @@
 ﻿using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace DotLurker.UsagesResolvers;
 
-public class MethodContainingSymbolsResolver : IContainingSymbolsResolver<IMethodSymbol>
+public class InvocableContainingSymbolsResolver : ISymbolUsagesResolver<IMethodSymbol>, ISymbolUsagesResolver<IPropertySymbol>
 {
     private readonly IDictionary<string, Compilation> _compilations;
 
-    public MethodContainingSymbolsResolver(IDictionary<string, Compilation> compilations)
+    public InvocableContainingSymbolsResolver(IDictionary<string, Compilation> compilations)
     {
         _compilations = compilations;
     }
@@ -43,16 +42,28 @@ public class MethodContainingSymbolsResolver : IContainingSymbolsResolver<IMetho
                 if (symbol != null)
                     usedSymbols.Add(symbol);
             }
+        }
+    
+        return usedSymbols;
+    }
+
+    public async Task<IReadOnlyCollection<ISymbol>> GetAllContainingSymbols(IPropertySymbol propertySymbol)
+    {
+        var usedSymbols = new List<ISymbol>();
+        foreach (var syntaxReference in propertySymbol.DeclaringSyntaxReferences)
+        {
+            var methodNode = await syntaxReference.GetSyntaxAsync();
+            var compilation = _compilations[propertySymbol.ContainingAssembly.Name];
+            var model = compilation.GetSemanticModel(syntaxReference.SyntaxTree);
             
-            // Invocable
-            var allInvocableUsages = methodNode.DescendantNodes().OfType<InvocationExpressionSyntax>();
-            foreach (var usage in allInvocableUsages)
+            // Normal usages
+            var allSymbolUsages = methodNode.DescendantNodes();
+
+            foreach (var usage in allSymbolUsages)
             {
                 var symbol = model.GetSymbolInfo(usage).Symbol;
-                //if (symbol. == TypeKind.Delegate)
-                //{
-               //     Console.WriteLine($"Type '{typeSymbol.Name}' is a delegate type.");
-                //}
+                if (symbol != null)
+                    usedSymbols.Add(symbol);
             }
         }
     

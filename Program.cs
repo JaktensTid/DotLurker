@@ -16,15 +16,15 @@ namespace DotLurker
             MSBuildLocator.RegisterMSBuildPath(@"C:\Program Files\dotnet\sdk\7.0.203");
             using var workspace = MSBuildWorkspace.Create();
 
-            Solution solution =
-                await workspace.OpenSolutionAsync(
-                    @"D:\VMbrowser\VMBrowser.Orca.Web\VMBrowser.Orca.Web\VMBrowser.Orca.Web.sln");
-            var projects = solution.Projects;
-            //var projects = new[]
-            //{
-            //    await workspace.OpenProjectAsync(
-            //        @"D:\RiderProjects\DotLurker\DotLurker.Sut\DotLurker.Sut\DotLurker.Sut.csproj")
-            //};
+            //Solution solution =
+            //    await workspace.OpenSolutionAsync(
+            //        @"D:\VMbrowser\VMBrowser.Orca.Web\VMBrowser.Orca.Web\VMBrowser.Orca.Web.sln");
+            //var projects = solution.Projects;
+            var projects = new[]
+            {
+                await workspace.OpenProjectAsync(
+                    @"D:\RiderProjects\DotLurker\DotLurker.Sut\DotLurker.Sut\DotLurker.Sut.csproj")
+            };
 
             var compilationsDictionary = new Dictionary<string, Compilation>();
             var compilations = new List<Compilation>();
@@ -49,17 +49,19 @@ namespace DotLurker
                         .OfType<ClassDeclarationSyntax>();
 
                     foreach (var classDeclaration in classDeclarations.Where(x =>
-                                 semanticModel.GetDeclaredSymbol(x).Name == "SymLogicHandler"))
+                                 semanticModel.GetDeclaredSymbol(x).Name == "Program"))
                     {
                         var method = classDeclaration.DescendantNodes()
                             .OfType<MethodDeclarationSyntax>()
-                            .FirstOrDefault(x => semanticModel.GetDeclaredSymbol(x)?.Name == "Creating");
+                            .FirstOrDefault(x => semanticModel.GetDeclaredSymbol(x)?.Name == "Main");
                         if (method != null)
                         {
                             var methodSymbol = semanticModel.GetDeclaredSymbol(method);
 
                             var usagesResolver = new UsagesTreeBuilder(inheritanceManager,
-                                new MethodContainingSymbolsResolver(compilationsDictionary));
+                                new InvocableContainingSymbolsResolver(compilationsDictionary),
+                                new InvocableContainingSymbolsResolver(compilationsDictionary),
+                                new FieldSymbolsResolver(projects));
                             var usages = await usagesResolver.PopulateNode(methodSymbol, new HashSet<int>());
 
                             Console.WriteLine("test");
