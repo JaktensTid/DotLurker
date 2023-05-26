@@ -1,19 +1,19 @@
-﻿using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
+﻿using DotLurker.Models;
+using Microsoft.CodeAnalysis;
 
 namespace DotLurker.UsagesResolvers;
 
 public class UsagesTreeBuilder
 {
     private readonly InheritanceManager _inheritanceManager;
-    private readonly ISymbolUsagesResolver<IMethodSymbol> _containingSymbolsResolverForMethods;
-    private readonly ISymbolUsagesResolver<IPropertySymbol> _containingSymbolsResolverForProperties;
-    private readonly ISymbolUsagesResolver<IFieldSymbol> _containingSymbolsResolverForFields;
+    private readonly ISymbolReferencesResolver<IMethodSymbol> _containingSymbolsResolverForMethods;
+    private readonly ISymbolReferencesResolver<IPropertySymbol> _containingSymbolsResolverForProperties;
+    private readonly ISymbolReferencesResolver<IFieldSymbol> _containingSymbolsResolverForFields;
 
     public UsagesTreeBuilder(InheritanceManager inheritanceManager,
-        ISymbolUsagesResolver<IMethodSymbol> containingSymbolsResolverForMethods,
-        ISymbolUsagesResolver<IPropertySymbol> containingSymbolsResolverForProperties,
-        ISymbolUsagesResolver<IFieldSymbol> containingSymbolsResolverForFields)
+        ISymbolReferencesResolver<IMethodSymbol> containingSymbolsResolverForMethods,
+        ISymbolReferencesResolver<IPropertySymbol> containingSymbolsResolverForProperties,
+        ISymbolReferencesResolver<IFieldSymbol> containingSymbolsResolverForFields)
     {
         _inheritanceManager = inheritanceManager;
         _containingSymbolsResolverForMethods = containingSymbolsResolverForMethods;
@@ -171,7 +171,7 @@ public class UsagesTreeBuilder
         return new UsageNode(symbol);
     }
 
-    public async Task<IReadOnlyCollection<UsageNode>> GetDerivedTypesUsages(ISymbol symbol,
+    private async Task<IReadOnlyCollection<UsageNode>> GetDerivedTypesUsages(ISymbol symbol,
         ISet<int> treeSymbolsHashes)
     {
         var derivedClasses = _inheritanceManager.GetAllDerivedClasses(symbol.ContainingType);

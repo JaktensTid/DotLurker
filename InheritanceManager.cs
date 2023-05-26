@@ -11,7 +11,7 @@ public class InheritanceManager
         _allTypes = hashSet;
     }
 
-    public static async Task<InheritanceManager> Create(params Compilation[] compilations)
+    public static InheritanceManager Create(params Compilation[] compilations)
     {
         var allTypes = new HashSet<INamedTypeSymbol>();
         foreach (var compilation in compilations)

@@ -3,11 +3,11 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace DotLurker.UsagesResolvers;
 
-public class FieldSymbolsResolver : ISymbolUsagesResolver<IFieldSymbol>
+public class FieldSymbolsReferencesResolver : ISymbolReferencesResolver<IFieldSymbol>
 {
     private readonly IReadOnlyCollection<Project> _projects;
 
-    public FieldSymbolsResolver(IReadOnlyCollection<Project> projects)
+    public FieldSymbolsReferencesResolver(IReadOnlyCollection<Project> projects)
     {
         _projects = projects;
     }

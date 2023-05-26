@@ -1,6 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 
-namespace DotLurker.UsagesResolvers;
+namespace DotLurker.Models;
 
 public class UsageNode
 {
@@ -18,5 +18,16 @@ public class UsageNode
         return Symbol.ToDisplayString();
     }
 
-    public static UsageNode Empty => new UsageNode(null);
+    public override bool Equals(object? obj)
+    {
+        if (obj is not UsageNode node)
+            return false;
+
+        return node.GetHashCode() == GetHashCode();
+    }
+
+    public override int GetHashCode()
+    {
+        return Symbol.GetHashCode();
+    }
 }
