@@ -1,6 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 
-namespace DotLurker;
+namespace DotLurker.Managers;
 
 public static class NamespaceManager
 {

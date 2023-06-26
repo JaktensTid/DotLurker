@@ -2,13 +2,13 @@
 
 namespace DotLurker.Models;
 
-public class UsageNode
+public class SymbolDetail
 {
     public ISymbol Symbol { get; set; }
-    public List<UsageNode> Usages { get; set; } = new();
-    public List<UsageNode> DerivedUsages { get; set; } = new();
+    public List<SymbolDetail> SymbolsInside { get; set; } = new();
+    public List<SymbolDetail> SymbolsInsideDerived { get; set; } = new();
 
-    public UsageNode(ISymbol symbol)
+    public SymbolDetail(ISymbol symbol)
     {
         Symbol = symbol;
     }
@@ -20,7 +20,7 @@ public class UsageNode
 
     public override bool Equals(object? obj)
     {
-        if (obj is not UsageNode node)
+        if (obj is not SymbolDetail node)
             return false;
 
         return node.GetHashCode() == GetHashCode();

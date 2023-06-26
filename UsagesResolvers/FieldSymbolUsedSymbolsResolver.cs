@@ -3,16 +3,16 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace DotLurker.UsagesResolvers;
 
-public class FieldSymbolsReferencesResolver : ISymbolReferencesResolver<IFieldSymbol>
+public class FieldSymbolUsedSymbolsResolver : IUsedSymbolsResolver<IFieldSymbol>
 {
     private readonly IReadOnlyCollection<Project> _projects;
 
-    public FieldSymbolsReferencesResolver(IReadOnlyCollection<Project> projects)
+    public FieldSymbolUsedSymbolsResolver(IReadOnlyCollection<Project> projects)
     {
         _projects = projects;
     }
 
-    public async Task<IReadOnlyCollection<ISymbol>> GetAllContainingSymbols(IFieldSymbol symbol)
+    public async Task<IReadOnlyCollection<ISymbol>> GetUsedSymbols(IFieldSymbol symbol)
     {
         var symbols = new List<ISymbol>();
         var assignments = await FindFieldAssignmentsAsync(symbol);

@@ -1,10 +1,10 @@
 ﻿using Microsoft.CodeAnalysis;
 
-namespace DotLurker;
+namespace DotLurker.Managers;
 
 public static class TypeManager
 {
-    public static ITypeSymbol GetUnderlyingType(ISymbol symbol)
+    public static ITypeSymbol GetDeclaringUnderlyingType(ISymbol symbol)
     {
         if (symbol is IFieldSymbol fieldSymbol)
             return fieldSymbol.Type;
