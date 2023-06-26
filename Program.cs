@@ -2,12 +2,7 @@
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.MSBuild;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 public class ClassDependencyWalker : CSharpSyntaxWalker
 {
@@ -92,48 +87,6 @@ public class ClassDependencyWalker : CSharpSyntaxWalker
         }
     }
 }
-
-// class Program
-// {
-//     static void Main(string[] args)
-//     {
-//         MSBuildLocator.RegisterMSBuildPath(@"C:\Program Files\dotnet\sdk\7.0.203");
-//         var solutionPath = @"D:\RiderProjects\DotLurker\DotLurker.Sut\DotLurker.Sut"; // Path to your solution file or project folder
-//
-//         var workspace = new AdhocWorkspace();
-//         var solution = workspace.AddSolution(SolutionInfo.Create(SolutionId.CreateNewId(), VersionStamp.Create()));
-//         var project = solution.AddProject("DotLurker.Sut", "DotLurker.Sut", LanguageNames.CSharp);
-//
-//         var filePaths = Directory.GetFiles(solutionPath, "*.cs", SearchOption.AllDirectories);
-//         foreach (var filePath in filePaths)
-//         {
-//             var document = project.AddDocument(Path.GetFileName(filePath), File.ReadAllText(filePath));
-//             project = document.Project;
-//         }
-//
-//         solution = project.Solution;
-//         var compilation = solution.GetProject(project.Id).GetCompilationAsync().Result;
-//
-//         var walker = new ClassDependencyWalker(compilation.GetSemanticModel(compilation.SyntaxTrees.First()));
-//         foreach (var syntaxTree in compilation.SyntaxTrees)
-//         {
-//             walker.Visit(syntaxTree.GetRoot());
-//         }
-//
-//         var dependencies = walker.Dependencies;
-//         foreach (var classDependency in dependencies)
-//         {
-//             Console.WriteLine($"Class: {classDependency.Key}");
-//             Console.WriteLine("Dependencies:");
-//             foreach (var dependency in classDependency.Value)
-//             {
-//                 Console.WriteLine(dependency);
-//             }
-//             Console.WriteLine();
-//         }
-//     }
-// }
-
 
 class Program
 {
@@ -349,71 +302,3 @@ class Program
         }
     }
 }
-
-
-// class Program
-// {
-//     static void Main(string[] args)
-//     {
-//         MSBuildLocator.RegisterMSBuildPath(@"C:\Program Files\dotnet\sdk\7.0.203");
-//         var workspace = MSBuildWorkspace.Create();
-//         var project = workspace
-//             .OpenProjectAsync(@"D:\RiderProjects\DotLurker\DotLurker.Sut\DotLurker.Sut\DotLurker.Sut.csproj").Result;
-//         var dependencies = new Dictionary<string, HashSet<string>>();
-//
-//         foreach (var document in project.Documents)
-//         {
-//             var model = document.GetSemanticModelAsync().Result;
-//             var tree = document.GetSyntaxTreeAsync().Result;
-//             var root = tree.GetRoot();
-//             var classes = root.DescendantNodes().OfType<ClassDeclarationSyntax>();
-//
-//             foreach (var @class in classes)
-//             {
-//                 var className = @class.Identifier.Text;
-//                 if (!dependencies.ContainsKey(className))
-//                     dependencies[className] = new HashSet<string>();
-//
-//                 var memberAccessExpressions = @class.DescendantNodes().OfType<MemberAccessExpressionSyntax>();
-//                 foreach (var memberAccessExpression in memberAccessExpressions)
-//                 {
-//                     var symbolInfo = model.GetSymbolInfo(memberAccessExpression);
-//                     if (symbolInfo.Symbol?.ContainingType?.Name != null)
-//                     {
-//                         var accessedClass = symbolInfo.Symbol.ContainingType.Name;
-//                         if (accessedClass != className)
-//                             dependencies[className].Add(accessedClass);
-//                     }
-//                 }
-//             }
-//         }
-//
-//         foreach (var pair in dependencies)
-//         {
-//             Console.WriteLine($"{pair.Key} depends on: {string.Join(", ", pair.Value)}");
-//         }
-//     }
-// }
-
-// using DotLurker.Managers;
-//
-// namespace DotLurker
-// {
-//     public class Program
-//     {
-//         public static async Task Main()
-//         {
-//             var gitManager = new GitManager(@"D:\RiderProjects\DotLurker\DotLurker\.git");
-//             var diff = gitManager.GetChanges();
-//             
-//             var lurkerCore = new LurkerCore();
-//             var usageNode = await lurkerCore.GetUsageTreeFromSolution(@"C:\Program Files\dotnet\sdk\7.0.203",
-//                 @"D:\VMbrowser\VMBrowser.Orca.Web\VMBrowser.Orca.Web\VMBrowser.Orca.Web.sln",
-//                 "VMBrowser.Orca.Web",
-//                 "Program",
-//                 "Main"
-//             );
-//             Console.WriteLine(usageNode);
-//         }
-//     }
-// }
