@@ -1,142 +1,37 @@
-﻿using Microsoft.Build.Locator;
+﻿using System.Security.Cryptography;
+using Microsoft.Build.Locator;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.MSBuild;
 using Microsoft.CodeAnalysis;
 
-public class ClassDependencyWalker : CSharpSyntaxWalker
+
+enum DependencyType
 {
-    private readonly SemanticModel _semanticModel;
+    Default,
+    Base
+}
 
-    public ClassDependencyWalker(SemanticModel semanticModel)
+
+class Node
+{
+    public DependencyType DependencyType { get; set; }
+    public string TypeName { get; set; }
+
+    public override bool Equals(object? obj)
     {
-        _semanticModel = semanticModel;
+        return obj is Node node && node.DependencyType == DependencyType && node.TypeName == TypeName;
     }
 
-    public IDictionary<string, HashSet<string>> Dependencies { get; } =
-        new Dictionary<string, HashSet<string>>();
-
-    public override void VisitClassDeclaration(ClassDeclarationSyntax node)
+    public override int GetHashCode()
     {
-        var className = node.Identifier.ValueText;
-        if (!Dependencies.ContainsKey(className))
-        {
-            Dependencies[className] = new HashSet<string>();
-        }
-
-        base.VisitClassDeclaration(node);
-    }
-
-    public override void VisitIdentifierName(IdentifierNameSyntax node)
-    {
-        var typeInfo = _semanticModel.GetTypeInfo(node);
-        var type = typeInfo.Type;
-        if (type != null && !type.ContainingNamespace.ToDisplayString().StartsWith("System"))
-        {
-            var className = node.Identifier.ValueText;
-            var parentClass = node.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
-            if (parentClass != null)
-            {
-                var parentClassName = parentClass.Identifier.ValueText;
-                Dependencies[parentClassName].Add(className);
-            }
-        }
-
-        base.VisitIdentifierName(node);
-    }
-
-    public override void VisitInterfaceDeclaration(InterfaceDeclarationSyntax node)
-    {
-        var interfaceName = node.Identifier.ValueText;
-        if (!Dependencies.ContainsKey(interfaceName))
-        {
-            Dependencies[interfaceName] = new HashSet<string>();
-        }
-
-        foreach (var method in node.Members
-                     .Where(x => x is MethodDeclarationSyntax)
-                     .Cast<MethodDeclarationSyntax>())
-        {
-            // Check for default interface implementations
-            if (method.Body != null || method.ExpressionBody != null)
-            {
-                var dependencies = ExtractDependenciesFromNode(method);
-                foreach (var dependency in dependencies)
-                {
-                    Dependencies[interfaceName].Add(dependency);
-                }
-            }
-        }
-
-        base.VisitInterfaceDeclaration(node);
-    }
-
-    private IEnumerable<string> ExtractDependenciesFromNode(SyntaxNode node)
-    {
-        var identifiers = node.DescendantNodesAndSelf()
-            .OfType<IdentifierNameSyntax>();
-
-        foreach (var identifier in identifiers)
-        {
-            var typeInfo = _semanticModel.GetTypeInfo(identifier);
-            var type = typeInfo.Type;
-            if (type != null && !type.ContainingNamespace.ToDisplayString().StartsWith("System"))
-            {
-                yield return identifier.Identifier.ValueText;
-            }
-        }
+        return HashCode.Combine(DependencyType.GetHashCode(), TypeName.GetHashCode());
     }
 }
 
+
 class Program
 {
-    public static Dictionary<string, List<string>> GenerateDependencyGraph2(string projectPath)
-    {
-        // Load the project solution
-        MSBuildWorkspace workspace = MSBuildWorkspace.Create();
-        Solution solution = workspace.OpenSolutionAsync(projectPath).Result;
-
-        // Create a dictionary to store the dependency graph
-        Dictionary<string, List<string>> dependencyGraph = new Dictionary<string, List<string>>();
-
-        // Traverse each project in the solution
-        foreach (Project project in solution.Projects)
-        {
-            // Traverse each document in the project
-            foreach (Document document in project.Documents)
-            {
-                // Parse the syntax tree of the document
-                SyntaxTree syntaxTree = document.GetSyntaxTreeAsync().Result;
-                SyntaxNode root = syntaxTree.GetRoot();
-
-                // Traverse the syntax tree and find class, struct, record, and interface declarations
-                IEnumerable<TypeDeclarationSyntax> typeDeclarations =
-                    root.DescendantNodes().OfType<TypeDeclarationSyntax>();
-
-                foreach (TypeDeclarationSyntax typeDeclaration in typeDeclarations)
-                {
-                    string typeName = typeDeclaration.Identifier.Text;
-                    string typeFullName = GetFullTypeName(typeDeclaration);
-
-                    // Add the type to the dependency graph
-                    if (!dependencyGraph.ContainsKey(typeFullName))
-                        dependencyGraph[typeFullName] = new List<string>();
-
-                    // Find and add dependencies from the type's members
-                    IEnumerable<MemberDeclarationSyntax> memberDeclarations = typeDeclaration.Members;
-
-                    foreach (MemberDeclarationSyntax memberDeclaration in memberDeclarations)
-                    {
-                        IEnumerable<string> memberDependencies = GetMemberDependencies(memberDeclaration);
-                        dependencyGraph[typeFullName].AddRange(memberDependencies);
-                    }
-                }
-            }
-        }
-
-        return dependencyGraph;
-    }
-
     private static string GetFullTypeName(TypeDeclarationSyntax typeDeclaration)
     {
         SyntaxNode currentNode = typeDeclaration;
@@ -157,7 +52,7 @@ class Program
             else if (currentNode is FileScopedNamespaceDeclarationSyntax fileScopedNamespaceNode)
             {
                 // File-scoped namespace does not have a name, so we can use a placeholder
-                typeNameParts.Insert(0, "<FileScopedNamespace>");
+                //typeNameParts.Insert(0, "<FileScopedNamespace>");
                 currentNode = fileScopedNamespaceNode.Parent;
             }
             else
@@ -176,21 +71,69 @@ class Program
         }
     }
 
-    private static IEnumerable<string> GetMemberDependencies(MemberDeclarationSyntax memberDeclaration)
+    public static string GetFilePathFromSymbolInfo(SymbolInfo symbolInfo)
+    {
+        var locations = symbolInfo.Symbol?.Locations;
+
+        if (locations != null && locations.HasValue)
+        {
+            // Filter for source file locations
+            var sourceLocations = locations.Value.Where(loc => loc.IsInSource);
+
+            // Get the file path from the first source location
+            var filePath = sourceLocations.FirstOrDefault()?.SourceTree?.FilePath;
+
+            if (!string.IsNullOrEmpty(filePath))
+            {
+                return filePath;
+            }
+        }
+
+        return string.Empty;
+    }
+
+    public static bool IsInterfaceOrClassOrRecordOrStructOrDelegate(ISymbol symbol)
+    {
+        return symbol is INamedTypeSymbol { TypeKind: TypeKind.Interface or TypeKind.Class or TypeKind.Struct };
+    }
+
+    private static IEnumerable<SymbolInfo> GetSymbols(SyntaxNode usage, IEnumerable<SemanticModel> semanticModels)
+    {
+        return semanticModels.Select<SemanticModel, SymbolInfo?>(x =>
+        {
+            try
+            {
+                return x.GetSymbolInfo(usage);
+            }
+            catch (ArgumentException)
+            {
+                return null;
+            }
+        }).Where(x => x != null).Select(x => x.Value);
+    }
+
+    private static IEnumerable<string> GetMemberDependencies(MemberDeclarationSyntax memberDeclaration,
+        IEnumerable<SemanticModel> semanticModels)
     {
         List<string> dependencies = new List<string>();
 
         // Collect dependencies from fields
         if (memberDeclaration is FieldDeclarationSyntax fieldDeclaration)
         {
-            foreach (VariableDeclaratorSyntax variable in fieldDeclaration.Declaration.Variables)
+            foreach (SyntaxNode usage in fieldDeclaration.DescendantNodes())
             {
-                foreach (SyntaxNode usage in variable.DescendantNodes())
+                if (usage is IdentifierNameSyntax identifierName)
                 {
-                    if (usage is IdentifierNameSyntax identifierName)
+                    var symbols = GetSymbols(usage, semanticModels);
+                    foreach (var symbolInfo in symbols)
                     {
-                        string dependencyName = identifierName.Identifier.Text;
-                        dependencies.Add(dependencyName);
+                        var path = GetFilePathFromSymbolInfo(symbolInfo);
+                        if (!string.IsNullOrWhiteSpace(path) &&
+                            IsInterfaceOrClassOrRecordOrStructOrDelegate(symbolInfo.Symbol))
+                        {
+                            string dependencyName = identifierName.Identifier.Text;
+                            dependencies.Add(symbolInfo.Symbol.ToDisplayString());
+                        }
                     }
                 }
             }
@@ -201,14 +144,23 @@ class Program
         {
             foreach (SyntaxNode usage in propertyDeclaration.DescendantNodes())
             {
-                if (usage is IdentifierNameSyntax identifierName)
+                if (usage is IdentifierNameSyntax)
                 {
-                    string dependencyName = identifierName.Identifier.Text;
-                    dependencies.Add(dependencyName);
+                    var symbols = GetSymbols(usage, semanticModels);
+                    foreach (var symbolInfo in symbols)
+                    {
+                        var path = GetFilePathFromSymbolInfo(symbolInfo);
+                        if (!string.IsNullOrWhiteSpace(path) &&
+                            IsInterfaceOrClassOrRecordOrStructOrDelegate(symbolInfo.Symbol))
+                        {
+                            dependencies.Add(symbolInfo.Symbol.ToDisplayString());
+                        }
+                    }
                 }
             }
         }
 
+        
         // Collect dependencies from methods
         if (memberDeclaration is MethodDeclarationSyntax methodDeclaration)
         {
@@ -216,8 +168,39 @@ class Program
             {
                 if (usage is IdentifierNameSyntax identifierName)
                 {
-                    string dependencyName = identifierName.Identifier.Text;
-                    dependencies.Add(dependencyName);
+                    var symbols = GetSymbols(usage, semanticModels);
+                    foreach (var symbolInfo in symbols)
+                    {
+                        var path = GetFilePathFromSymbolInfo(symbolInfo);
+                        if (!string.IsNullOrWhiteSpace(path) &&
+                            IsInterfaceOrClassOrRecordOrStructOrDelegate(symbolInfo.Symbol))
+                        {
+                            string dependencyName = identifierName.Identifier.Text;
+                            dependencies.Add(symbolInfo.Symbol.ToDisplayString());
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Collect dependencies from methods
+        if (memberDeclaration is ConstructorDeclarationSyntax constructorDeclarationSyntax)
+        {
+            foreach (SyntaxNode usage in constructorDeclarationSyntax.DescendantNodes())
+            {
+                if (usage is IdentifierNameSyntax identifierName)
+                {
+                    var symbols = GetSymbols(usage, semanticModels);
+                    foreach (var symbolInfo in symbols)
+                    {
+                        var path = GetFilePathFromSymbolInfo(symbolInfo);
+                        if (!string.IsNullOrWhiteSpace(path) &&
+                            IsInterfaceOrClassOrRecordOrStructOrDelegate(symbolInfo.Symbol))
+                        {
+                            string dependencyName = identifierName.Identifier.Text;
+                            dependencies.Add(symbolInfo.Symbol.ToDisplayString());
+                        }
+                    }
                 }
             }
         }
@@ -229,14 +212,17 @@ class Program
 
 
     // DO NOT CHANGE!!
-    public static Dictionary<string, List<string>> GenerateDependencyGraph(string projectPath)
+    public static Dictionary<string, HashSet<Node>> GenerateDependencyGraph(string projectPath)
     {
         // Load the project solution
         MSBuildWorkspace workspace = MSBuildWorkspace.Create();
         Solution solution = workspace.OpenSolutionAsync(projectPath).Result;
 
         // Create a dictionary to store the dependency graph
-        Dictionary<string, List<string>> dependencyGraph = new Dictionary<string, List<string>>();
+        Dictionary<string, HashSet<Node>> dependencyGraph = new Dictionary<string, HashSet<Node>>();
+
+        var documents = solution.Projects.SelectMany(p => p.Documents).ToList();
+        var semanticModels = documents.Select(x => x.GetSemanticModelAsync().Result).ToList();
 
         // Traverse each project in the solution
         foreach (Project project in solution.Projects)
@@ -256,21 +242,60 @@ class Program
                 {
                     string typeName = typeDeclaration.Identifier.Text;
                     string typeKind = typeDeclaration.Kind().ToString();
+                    string typeFullName = GetFullTypeName(typeDeclaration);
 
                     // Add the type to the dependency graph
                     if (!dependencyGraph.ContainsKey(typeName))
-                        dependencyGraph[typeName] = new List<string>();
+                        dependencyGraph[typeName] = new HashSet<Node>();
 
-                    // Find and add dependencies
+                    // Find and add base types
                     IEnumerable<IdentifierNameSyntax> dependencies = typeDeclaration.DescendantNodes()
                         .OfType<IdentifierNameSyntax>()
                         .Where(identifier => identifier.Parent is BaseTypeSyntax);
 
                     foreach (IdentifierNameSyntax dependency in dependencies)
                     {
+                        var symbols = GetSymbols(dependency, semanticModels);
                         string dependencyName = dependency.Identifier.Text;
-                        if (!dependencyGraph[typeName].Contains(dependencyName))
-                            dependencyGraph[typeName].Add(dependencyName);
+                        var node = new Node
+                        {
+                            DependencyType = DependencyType.Base,
+                            TypeName = dependencyName
+                        };
+
+                        if (!dependencyGraph[typeName].Contains(node))
+                            dependencyGraph[typeName].Add(node);
+                    }
+                }
+
+                // bases
+                foreach (TypeDeclarationSyntax typeDeclaration in typeDeclarations)
+                {
+                    string typeName = typeDeclaration.Identifier.Text;
+                    string typeFullName = GetFullTypeName(typeDeclaration);
+
+                    //if (!typeFullName.Contains("StaticClass")) 
+                    //    continue; // TODO rude
+
+                    // Add the type to the dependency graph
+                    if (!dependencyGraph.ContainsKey(typeFullName))
+                        dependencyGraph[typeFullName] = new HashSet<Node>();
+
+                    // Find and add dependencies from the type's members
+                    IEnumerable<MemberDeclarationSyntax> memberDeclarations = typeDeclaration.Members;
+
+                    foreach (MemberDeclarationSyntax memberDeclaration in memberDeclarations)
+                    {
+                        IEnumerable<string> memberDependencies =
+                            GetMemberDependencies(memberDeclaration, semanticModels);
+                        foreach (var member in memberDependencies.Select(x => new Node
+                                 {
+                                     DependencyType = DependencyType.Default,
+                                     TypeName = x
+                                 }))
+                        {
+                            dependencyGraph[typeFullName].Add(member);
+                        }
                     }
                 }
             }
@@ -284,18 +309,19 @@ class Program
     {
         MSBuildLocator.RegisterMSBuildPath(@"C:\Program Files\dotnet\sdk\7.0.203");
         string projectPath = @"D:\RiderProjects\DotLurker\DotLurker\DotLurker.sln";
-        var dependencyGraph = GenerateDependencyGraph2(projectPath);
+        var dependencyGraph = GenerateDependencyGraph(projectPath);
         //var dependencyGraph = GenerateDependencyGraph(projectPath);
-        foreach (KeyValuePair<string, List<string>> entry in dependencyGraph)
+        foreach (KeyValuePair<string, HashSet<Node>> entry in dependencyGraph)
         {
             string typeName = entry.Key;
-            List<string> dependencies = entry.Value;
+            HashSet<Node> dependencies = entry.Value;
 
             Console.WriteLine($"Type: {typeName}");
             Console.WriteLine("Dependencies:");
-            foreach (string dependency in dependencies)
+            foreach (var dependency in dependencies)
             {
-                Console.WriteLine(dependency);
+                Console.WriteLine(
+                    $"Dep: {dependency.TypeName}, Type: {(dependency.DependencyType == DependencyType.Base ? "Base" : "Dependency")}");
             }
 
             Console.WriteLine();
