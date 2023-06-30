@@ -1,6 +1,4 @@
-﻿using System.Security.Cryptography;
-using Microsoft.Build.Locator;
-using Microsoft.CodeAnalysis.CSharp;
+﻿using Microsoft.Build.Locator;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.MSBuild;
 using Microsoft.CodeAnalysis;
@@ -77,6 +75,9 @@ class Program
 
         if (locations != null && locations.HasValue)
         {
+            if (!symbolInfo.Symbol.ToDisplayString().StartsWith("DotLurker"))
+                return null;
+            
             // Filter for source file locations
             var sourceLocations = locations.Value.Where(loc => loc.IsInSource);
 
@@ -94,12 +95,12 @@ class Program
 
     public static bool IsInterfaceOrClassOrRecordOrStructOrDelegate(ISymbol symbol)
     {
-        return symbol is INamedTypeSymbol { TypeKind: TypeKind.Interface or TypeKind.Class or TypeKind.Struct };
+        return symbol is INamedTypeSymbol { TypeKind: TypeKind.Interface or TypeKind.Class or TypeKind.Struct or TypeKind.Enum };
     }
 
-    private static IEnumerable<SymbolInfo> GetSymbols(SyntaxNode usage, IEnumerable<SemanticModel> semanticModels)
+    private static string? SyntaxNodeAsUsage(SyntaxNode usage, IEnumerable<SemanticModel> semanticModels)
     {
-        return semanticModels.Select<SemanticModel, SymbolInfo?>(x =>
+        var symbols = semanticModels.Select<SemanticModel, SymbolInfo?>(x =>
         {
             try
             {
@@ -110,6 +111,17 @@ class Program
                 return null;
             }
         }).Where(x => x != null).Select(x => x.Value);
+        foreach (var symbolInfo in symbols)
+        {
+            var path = GetFilePathFromSymbolInfo(symbolInfo);
+            if (!string.IsNullOrWhiteSpace(path) &&
+                IsInterfaceOrClassOrRecordOrStructOrDelegate(symbolInfo.Symbol))
+            {
+                return symbolInfo.Symbol.ToDisplayString();
+            }
+        }
+
+        return null;
     }
 
     private static IEnumerable<string> GetMemberDependencies(MemberDeclarationSyntax memberDeclaration,
@@ -122,18 +134,12 @@ class Program
         {
             foreach (SyntaxNode usage in fieldDeclaration.DescendantNodes())
             {
-                if (usage is IdentifierNameSyntax identifierName)
+                if (usage is IdentifierNameSyntax)
                 {
-                    var symbols = GetSymbols(usage, semanticModels);
-                    foreach (var symbolInfo in symbols)
+                    var usageName = SyntaxNodeAsUsage(usage, semanticModels);
+                    if (!string.IsNullOrWhiteSpace(usageName))
                     {
-                        var path = GetFilePathFromSymbolInfo(symbolInfo);
-                        if (!string.IsNullOrWhiteSpace(path) &&
-                            IsInterfaceOrClassOrRecordOrStructOrDelegate(symbolInfo.Symbol))
-                        {
-                            string dependencyName = identifierName.Identifier.Text;
-                            dependencies.Add(symbolInfo.Symbol.ToDisplayString());
-                        }
+                        dependencies.Add(usageName);
                     }
                 }
             }
@@ -146,15 +152,10 @@ class Program
             {
                 if (usage is IdentifierNameSyntax)
                 {
-                    var symbols = GetSymbols(usage, semanticModels);
-                    foreach (var symbolInfo in symbols)
+                    var usageName = SyntaxNodeAsUsage(usage, semanticModels);
+                    if (!string.IsNullOrWhiteSpace(usageName))
                     {
-                        var path = GetFilePathFromSymbolInfo(symbolInfo);
-                        if (!string.IsNullOrWhiteSpace(path) &&
-                            IsInterfaceOrClassOrRecordOrStructOrDelegate(symbolInfo.Symbol))
-                        {
-                            dependencies.Add(symbolInfo.Symbol.ToDisplayString());
-                        }
+                        dependencies.Add(usageName);
                     }
                 }
             }
@@ -168,16 +169,10 @@ class Program
             {
                 if (usage is IdentifierNameSyntax identifierName)
                 {
-                    var symbols = GetSymbols(usage, semanticModels);
-                    foreach (var symbolInfo in symbols)
+                    var usageName = SyntaxNodeAsUsage(usage, semanticModels);
+                    if (!string.IsNullOrWhiteSpace(usageName))
                     {
-                        var path = GetFilePathFromSymbolInfo(symbolInfo);
-                        if (!string.IsNullOrWhiteSpace(path) &&
-                            IsInterfaceOrClassOrRecordOrStructOrDelegate(symbolInfo.Symbol))
-                        {
-                            string dependencyName = identifierName.Identifier.Text;
-                            dependencies.Add(symbolInfo.Symbol.ToDisplayString());
-                        }
+                        dependencies.Add(usageName);
                     }
                 }
             }
@@ -190,16 +185,10 @@ class Program
             {
                 if (usage is IdentifierNameSyntax identifierName)
                 {
-                    var symbols = GetSymbols(usage, semanticModels);
-                    foreach (var symbolInfo in symbols)
+                    var usageName = SyntaxNodeAsUsage(usage, semanticModels);
+                    if (!string.IsNullOrWhiteSpace(usageName))
                     {
-                        var path = GetFilePathFromSymbolInfo(symbolInfo);
-                        if (!string.IsNullOrWhiteSpace(path) &&
-                            IsInterfaceOrClassOrRecordOrStructOrDelegate(symbolInfo.Symbol))
-                        {
-                            string dependencyName = identifierName.Identifier.Text;
-                            dependencies.Add(symbolInfo.Symbol.ToDisplayString());
-                        }
+                        dependencies.Add(usageName);
                     }
                 }
             }
@@ -255,16 +244,18 @@ class Program
 
                     foreach (IdentifierNameSyntax dependency in dependencies)
                     {
-                        var symbols = GetSymbols(dependency, semanticModels);
-                        string dependencyName = dependency.Identifier.Text;
-                        var node = new Node
+                        var usageName = SyntaxNodeAsUsage(dependency, semanticModels);
+                        if (!string.IsNullOrWhiteSpace(usageName))
                         {
-                            DependencyType = DependencyType.Base,
-                            TypeName = dependencyName
-                        };
+                            var node = new Node
+                            {
+                                DependencyType = DependencyType.Base,
+                                TypeName = usageName
+                            };
 
-                        if (!dependencyGraph[typeName].Contains(node))
-                            dependencyGraph[typeName].Add(node);
+                            if (!dependencyGraph[typeName].Contains(node))
+                                dependencyGraph[typeName].Add(node);
+                        }
                     }
                 }
 
@@ -274,7 +265,7 @@ class Program
                     string typeName = typeDeclaration.Identifier.Text;
                     string typeFullName = GetFullTypeName(typeDeclaration);
 
-                    //if (!typeFullName.Contains("StaticClass")) 
+                    //if (!typeFullName.Contains("FieldSymbolUsed")) 
                     //    continue; // TODO rude
 
                     // Add the type to the dependency graph
@@ -308,8 +299,8 @@ class Program
     public static void Main(string[] args)
     {
         MSBuildLocator.RegisterMSBuildPath(@"C:\Program Files\dotnet\sdk\7.0.203");
-        string projectPath = @"D:\RiderProjects\DotLurker\DotLurker\DotLurker.sln";
-        var dependencyGraph = GenerateDependencyGraph(projectPath);
+        string solutionPath = @"D:\RiderProjects\DotLurker\DotLurker\DotLurker.sln";
+        var dependencyGraph = GenerateDependencyGraph(solutionPath);
         //var dependencyGraph = GenerateDependencyGraph(projectPath);
         foreach (KeyValuePair<string, HashSet<Node>> entry in dependencyGraph)
         {
