@@ -1,0 +1,139 @@
+{
+  "DotLurker.AssembliesExtractor": [],
+  "DotLurker.HtmlGenerator": [],
+  "DotLurker.Node": [
+    {
+      "dependencyType": 1,
+      "typeName": "DependencyType",
+      "namespace": "DotLurker",
+      "filePath": "D:\\RiderProjects\\DotLurker\\DotLurker\\DependencyType.cs"
+    },
+    {
+      "dependencyType": 1,
+      "typeName": "Node",
+      "namespace": "DotLurker",
+      "filePath": "D:\\RiderProjects\\DotLurker\\DotLurker\\Node.cs"
+    }
+  ],
+  "DotLurker.DependencyType": [],
+  "DotLurker.Program": [
+    {
+      "dependencyType": 1,
+      "typeName": "TreeExtractor",
+      "namespace": "DotLurker",
+      "filePath": "D:\\RiderProjects\\DotLurker\\DotLurker\\TreeExtractor.cs"
+    }
+  ],
+  "DotLurker.TreeExtractor": [
+    {
+      "dependencyType": 1,
+      "typeName": "Node",
+      "namespace": "DotLurker",
+      "filePath": "D:\\RiderProjects\\DotLurker\\DotLurker\\Node.cs"
+    },
+    {
+      "dependencyType": 1,
+      "typeName": "DependencyType",
+      "namespace": "DotLurker",
+      "filePath": "D:\\RiderProjects\\DotLurker\\DotLurker\\DependencyType.cs"
+    },
+    {
+      "dependencyType": 1,
+      "typeName": "AssembliesExtractor",
+      "namespace": "DotLurker",
+      "filePath": "D:\\RiderProjects\\DotLurker\\DotLurker\\AssembliesExtractor.cs"
+    }
+  ],
+  "DotLurker.Sut.Base": [
+    {
+      "dependencyType": 2,
+      "typeName": "BaseAbstract",
+      "namespace": "DotLurker.Sut",
+      "filePath": "D:\\RiderProjects\\DotLurker\\DotLurker.Sut\\DotLurker.Sut\\BaseAbstract.cs"
+    }
+  ],
+  "DotLurker.Sut.BaseAbstract": [],
+  "DotLurker.Sut.ChildA": [
+    {
+      "dependencyType": 2,
+      "typeName": "Base",
+      "namespace": "DotLurker.Sut",
+      "filePath": "D:\\RiderProjects\\DotLurker\\DotLurker.Sut\\DotLurker.Sut\\Base.cs"
+    },
+    {
+      "dependencyType": 1,
+      "typeName": "StaticClass",
+      "namespace": "DotLurker.Sut",
+      "filePath": "D:\\RiderProjects\\DotLurker\\DotLurker.Sut\\DotLurker.Sut\\StaticClass.cs"
+    }
+  ],
+  "DotLurker.Sut.StaticClass": [
+    {
+      "dependencyType": 1,
+      "typeName": "BaseAbstract",
+      "namespace": "DotLurker.Sut",
+      "filePath": "D:\\RiderProjects\\DotLurker\\DotLurker.Sut\\DotLurker.Sut\\BaseAbstract.cs"
+    },
+    {
+      "dependencyType": 1,
+      "typeName": "Base",
+      "namespace": "DotLurker.Sut",
+      "filePath": "D:\\RiderProjects\\DotLurker\\DotLurker.Sut\\DotLurker.Sut\\Base.cs"
+    },
+    {
+      "dependencyType": 1,
+      "typeName": "IInterfaceSut",
+      "namespace": "DotLurker.Sut",
+      "filePath": "D:\\RiderProjects\\DotLurker\\DotLurker.Sut\\DotLurker.Sut\\IInterfaceSut.cs"
+    },
+    {
+      "dependencyType": 1,
+      "typeName": "ChildA",
+      "namespace": "DotLurker.Sut",
+      "filePath": "D:\\RiderProjects\\DotLurker\\DotLurker.Sut\\DotLurker.Sut\\ChildA.cs"
+    },
+    {
+      "dependencyType": 1,
+      "typeName": "ChildB",
+      "namespace": "DotLurker.Sut",
+      "filePath": "D:\\RiderProjects\\DotLurker\\DotLurker.Sut\\DotLurker.Sut\\ChildB.cs"
+    }
+  ],
+  "DotLurker.Sut.ChildB": [
+    {
+      "dependencyType": 2,
+      "typeName": "Base",
+      "namespace": "DotLurker.Sut",
+      "filePath": "D:\\RiderProjects\\DotLurker\\DotLurker.Sut\\DotLurker.Sut\\Base.cs"
+    },
+    {
+      "dependencyType": 2,
+      "typeName": "IInterfaceSut",
+      "namespace": "DotLurker.Sut",
+      "filePath": "D:\\RiderProjects\\DotLurker\\DotLurker.Sut\\DotLurker.Sut\\IInterfaceSut.cs"
+    }
+  ],
+  "DotLurker.Sut.IInterfaceSut": [],
+  "DotLurker.Sut.Program": [
+    {
+      "dependencyType": 1,
+      "typeName": "StaticClass",
+      "namespace": "DotLurker.Sut",
+      "filePath": "D:\\RiderProjects\\DotLurker\\DotLurker.Sut\\DotLurker.Sut\\StaticClass.cs"
+    }
+  ],
+  "DotLurker.Sut.TestStruct": [
+    {
+      "dependencyType": 2,
+      "typeName": "IInterfaceSut",
+      "namespace": "DotLurker.Sut",
+      "filePath": "D:\\RiderProjects\\DotLurker\\DotLurker.Sut\\DotLurker.Sut\\IInterfaceSut.cs"
+    },
+    {
+      "dependencyType": 1,
+      "typeName": "ChildB",
+      "namespace": "DotLurker.Sut",
+      "filePath": "D:\\RiderProjects\\DotLurker\\DotLurker.Sut\\DotLurker.Sut\\ChildB.cs"
+    }
+  ]
+}

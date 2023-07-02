@@ -1,0 +1,42 @@
+﻿<!DOCTYPE html>
+<html>
+<body>
+<!-- content -->
+<div id="diagram" style="width: 100%; height: 100%"></div>
+
+<!-- dependencies -->
+<script src="https://cdn.jsdelivr.net/npm/mxgraph@4.2.2/javascript/mxClient.js"></script>
+
+<!-- code -->
+<script type="text/javascript">
+    var container = document.getElementById('diagram');
+    var graph = new mxGraph(container);
+
+    var parent = graph.getDefaultParent();
+
+    graph.getModel().beginUpdate();
+
+    try {
+        // Create vertices (classes)
+        var class1 = graph.insertVertex(parent, null, 'Class1', 20, 20, 80, 40);
+        var class2 = graph.insertVertex(parent, null, 'Class2', 200, 20, 80, 40);
+        var methodName = 'methodName()';
+        class2.setAttribute('label', class2.getAttribute('label') + '\n' + methodName);
+
+        // Create edges (relationships)
+        var extendsRelation = graph.insertEdge(parent, null, 'extends', class1, class2);
+        
+    } finally {
+        graph.getModel().endUpdate();
+    }
+
+    // Refresh the graph to render the layout
+    graph.refresh();
+
+    var encoder = new mxCodec();
+    var encodedGraphModel = encoder.encode(graph.getModel());
+    var xml = mxUtils.getXml(encodedGraphModel);
+    console.log(xml);
+</script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>UML Class Diagram Example</title>
+    <style>
+        #diagram {
+            width: 100%;
+            height: 500px;
+        }
+    </style>
+</head>
+<body>
+<div id="diagram"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/backbone.js/1.4.1/backbone-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jointjs/3.7.4/joint.min.js"></script>
+<script>
+    // Initialize the diagram
+    var graph = new joint.dia.Graph();
+    var paper = new joint.dia.Paper({
+        el: document.getElementById('diagram'),
+        model: graph,
+        width: 800,
+        height: 600,
+        gridSize: 10,
+        drawGrid: true,
+        background: {
+            color: 'rgba(0, 255, 0, 0.3)'
+        }
+    });
+
+    // Create classes
+    var class1 = new joint.shapes.uml.Class({
+        position: { x: 100, y: 30 },
+        size: { width: 200, height: 100 },
+        name: 'Class1',
+        attributes: ['+attribute1: Type', '-attribute2: Type'],
+        methods: ['+method1()', '-method2()']
+    });
+
+    var class2 = new joint.shapes.uml.Class({
+        position: { x: 400, y: 180 },
+        size: { width: 200, height: 100 },
+        name: 'Class2',
+        attributes: ['+attribute3: Type'],
+        methods: ['+method3()']
+    });
+
+    // Create associations
+    var association = new joint.shapes.uml.Association({
+        source: { id: class1.id },
+        target: { id: class2.id }
+    });
+
+    // Add classes and associations to the graph
+    graph.addCells([class1, class2, association]);
+</script>
+</body>
+</html>
