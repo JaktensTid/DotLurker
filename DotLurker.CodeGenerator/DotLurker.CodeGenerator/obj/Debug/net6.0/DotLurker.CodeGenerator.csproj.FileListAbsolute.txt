@@ -1,0 +1,15 @@
+D:\RiderProjects\DotLurker\DotLurker.CodeGenerator\DotLurker.CodeGenerator\bin\Debug\net6.0\DotLurker.CodeGenerator.exe
+D:\RiderProjects\DotLurker\DotLurker.CodeGenerator\DotLurker.CodeGenerator\bin\Debug\net6.0\DotLurker.CodeGenerator.deps.json
+D:\RiderProjects\DotLurker\DotLurker.CodeGenerator\DotLurker.CodeGenerator\bin\Debug\net6.0\DotLurker.CodeGenerator.runtimeconfig.json
+D:\RiderProjects\DotLurker\DotLurker.CodeGenerator\DotLurker.CodeGenerator\bin\Debug\net6.0\DotLurker.CodeGenerator.dll
+D:\RiderProjects\DotLurker\DotLurker.CodeGenerator\DotLurker.CodeGenerator\bin\Debug\net6.0\DotLurker.CodeGenerator.pdb
+D:\RiderProjects\DotLurker\DotLurker.CodeGenerator\DotLurker.CodeGenerator\obj\Debug\net6.0\DotLurker.CodeGenerator.csproj.AssemblyReference.cache
+D:\RiderProjects\DotLurker\DotLurker.CodeGenerator\DotLurker.CodeGenerator\obj\Debug\net6.0\DotLurker.CodeGenerator.GeneratedMSBuildEditorConfig.editorconfig
+D:\RiderProjects\DotLurker\DotLurker.CodeGenerator\DotLurker.CodeGenerator\obj\Debug\net6.0\DotLurker.CodeGenerator.AssemblyInfoInputs.cache
+D:\RiderProjects\DotLurker\DotLurker.CodeGenerator\DotLurker.CodeGenerator\obj\Debug\net6.0\DotLurker.CodeGenerator.AssemblyInfo.cs
+D:\RiderProjects\DotLurker\DotLurker.CodeGenerator\DotLurker.CodeGenerator\obj\Debug\net6.0\DotLurker.CodeGenerator.csproj.CoreCompileInputs.cache
+D:\RiderProjects\DotLurker\DotLurker.CodeGenerator\DotLurker.CodeGenerator\obj\Debug\net6.0\DotLurker.CodeGenerator.dll
+D:\RiderProjects\DotLurker\DotLurker.CodeGenerator\DotLurker.CodeGenerator\obj\Debug\net6.0\refint\DotLurker.CodeGenerator.dll
+D:\RiderProjects\DotLurker\DotLurker.CodeGenerator\DotLurker.CodeGenerator\obj\Debug\net6.0\DotLurker.CodeGenerator.pdb
+D:\RiderProjects\DotLurker\DotLurker.CodeGenerator\DotLurker.CodeGenerator\obj\Debug\net6.0\DotLurker.CodeGenerator.genruntimeconfig.cache
+D:\RiderProjects\DotLurker\DotLurker.CodeGenerator\DotLurker.CodeGenerator\obj\Debug\net6.0\ref\DotLurker.CodeGenerator.dll
