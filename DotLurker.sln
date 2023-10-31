@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotLurker.Sut", "..\DotLurk
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotLurker.Web", "..\DotLurker.Web\DotLurker.Web\DotLurker.Web.csproj", "{5BB10B74-BB81-458E-B0C7-C04D972D181D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotLurker.CodeGenerator", "..\DotLurker.CodeGenerator\DotLurker.CodeGenerator\DotLurker.CodeGenerator.csproj", "{BD577958-A064-4CDF-8DAD-08A8A9655D50}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{5BB10B74-BB81-458E-B0C7-C04D972D181D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5BB10B74-BB81-458E-B0C7-C04D972D181D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5BB10B74-BB81-458E-B0C7-C04D972D181D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BD577958-A064-4CDF-8DAD-08A8A9655D50}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BD577958-A064-4CDF-8DAD-08A8A9655D50}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BD577958-A064-4CDF-8DAD-08A8A9655D50}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BD577958-A064-4CDF-8DAD-08A8A9655D50}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
